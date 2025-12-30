@@ -25,8 +25,6 @@ function findScrollableAncestor(start: Element | null): HTMLElement | null {
 }
 
 export function getScrollTarget(): ScrollTarget {
-  // Notion often uses a central scroll container, but it changes.
-  // We try a few heuristics and fall back to window.
   const root = getContentRoot();
   const scrollAncestor = findScrollableAncestor(root);
   if (scrollAncestor) return { kind: 'element', el: scrollAncestor };
@@ -48,12 +46,10 @@ export function getScrollTarget(): ScrollTarget {
     if (isScrollable(el)) return { kind: 'element', el };
   }
 
-  // Fallback: if document itself scrolls, use window.
   return { kind: 'window' };
 }
 
 export function getContentRoot(): HTMLElement {
-  // Prefer Notion page content containers.
   const byTestId = document.querySelector('[data-testid="page-content"]');
   if (byTestId && isElement(byTestId)) return byTestId as HTMLElement;
 
@@ -93,14 +89,11 @@ function uniqBoundaries(boundaries: SlideBoundary[]): SlideBoundary[] {
 export function scanSlideBoundaries(root: HTMLElement): SlideBoundary[] {
   const boundaries: SlideBoundary[] = [];
 
-  // Snapshot blocks list for stable DOM-order computations.
   const blocks = Array.from(root.querySelectorAll<HTMLElement>('[data-block-id]'));
 
-  // Start boundary
   const firstBlock = blocks[0] ?? root.firstElementChild?.closest<HTMLElement>('*') ?? root;
   boundaries.push({ kind: 'start', blockId: firstBlock?.getAttribute?.('data-block-id') ?? undefined, element: firstBlock ?? root });
 
-  // Heading 1 boundaries
   const h1Candidates: Element[] = [
     ...Array.from(root.querySelectorAll('[role="heading"][aria-level="1"]')),
     ...Array.from(root.querySelectorAll('h1'))
@@ -111,7 +104,6 @@ export function scanSlideBoundaries(root: HTMLElement): SlideBoundary[] {
     boundaries.push({ kind: 'h1', blockId: block.getAttribute('data-block-id') ?? undefined, element: block });
   }
 
-  // Divider boundaries
   const dividerCandidates: Element[] = [
     ...Array.from(root.querySelectorAll('hr')),
     ...Array.from(root.querySelectorAll('[role="separator"]')),

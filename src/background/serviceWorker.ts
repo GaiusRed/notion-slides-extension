@@ -15,27 +15,6 @@ async function ping(tabId: number): Promise<boolean> {
   }
 }
 
-async function ensurePageBridge(tabId: number): Promise<void> {
-  try {
-    await chrome.scripting.executeScript({
-      target: { tabId },
-      world: 'MAIN',
-      func: () => {
-        try {
-          (window as any).__NotionSlides = (window as any).__NotionSlides || {};
-          (window as any).__NotionSlides.debug = () => {
-            window.postMessage({ source: 'notion-slides', type: 'debug' }, '*');
-          };
-        } catch {
-          // ignore
-        }
-      }
-    });
-  } catch (e) {
-    console.warn('[NotionSlides] Failed to inject page bridge:', e);
-  }
-}
-
 async function ensureContentScript(tabId: number): Promise<void> {
   const ok = await ping(tabId);
   if (ok) return;
@@ -45,19 +24,15 @@ async function ensureContentScript(tabId: number): Promise<void> {
       target: { tabId },
       files: ['content/contentScript.js']
     });
-  } catch (e) {
-    // Non-fatal: if injection fails due to permissions or URL, we just no-op.
-    console.warn('[NotionSlides] Failed to inject content script:', e);
+  } catch {
   }
 }
 
 async function sendToggle(tabId: number): Promise<void> {
   await ensureContentScript(tabId);
-  await ensurePageBridge(tabId);
   try {
     await chrome.tabs.sendMessage(tabId, { type: 'ns-toggle-presentation' });
-  } catch (e) {
-    console.warn('[NotionSlides] Toggle failed (no receiver?):', e);
+  } catch {
   }
 }
 
@@ -75,6 +50,5 @@ chrome.commands.onCommand.addListener(async (command) => {
 
 chrome.runtime.onMessage.addListener((msg: MessageToBackground) => {
   if (msg?.type === 'ns-pong') {
-    // reserved
   }
 });

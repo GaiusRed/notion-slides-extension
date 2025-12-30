@@ -3,7 +3,6 @@ export type BoundaryKind = 'start' | 'h1' | 'divider';
 export type SlideBoundary = {
   kind: BoundaryKind;
   blockId?: string;
-  // Snapshot element at scan time (may become disconnected due to virtualization)
   element?: HTMLElement;
 };
 

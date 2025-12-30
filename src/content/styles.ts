@@ -1,21 +1,16 @@
 export const PRESENTATION_CSS = `
-/* Scope everything to presentation mode */
 :root.ns-presenting {
-  /* Avoid Notion overscroll quirks */
   overscroll-behavior: none;
 }
 
-/* Utility class for hiding elements */
 :root.ns-presenting .ns-hidden {
   display: none !important;
 }
 
 :root.ns-presenting body {
-  /* Keep Notion typography/colors; just reduce distractions */
   overflow: hidden;
 }
 
-/* Hide common Notion chrome elements (defensive selectors) */
 :root.ns-presenting .notion-topbar,
 :root.ns-presenting [data-testid="topbar"],
 :root.ns-presenting [data-testid="notion-topbar"],
@@ -30,9 +25,7 @@ export const PRESENTATION_CSS = `
   display: none !important;
 }
 
-/* Give the main page more of a slide-like center lane */
 :root.ns-presenting [data-testid="page-content"] {
-  /* Keep the scroller full-width so the scrollbar is at the screen edge */
   width: 100vw !important;
   max-width: none !important;
 }
@@ -43,8 +36,6 @@ export const PRESENTATION_CSS = `
   max-width: 1100px !important;
 }
 
-
-/* Hide common page-header / database property chrome */
 :root.ns-presenting .notion-page-header,
 :root.ns-presenting [data-testid="page-header"],
 :root.ns-presenting [data-testid="page-properties"],
@@ -54,22 +45,17 @@ export const PRESENTATION_CSS = `
   display: none !important;
 }
 
-/* Safety-net: DB property/tag strip often lives inside a ContentEditableVoid node */
-:root.ns-presenting .layout-content [data-content-editable-void="true"][contenteditable="false"]:not(:has([data-block-id])) {
+:root.ns-presenting [class*="propertyRow"]:not(:has([data-block-id])),
+:root.ns-presenting [class*="property-row"]:not(:has([data-block-id])),
+:root.ns-presenting [class*="propertyValue"]:not(:has([data-block-id])),
+:root.ns-presenting [class*="propertyItem"]:not(:has([data-block-id])) {
   display: none !important;
 }
 
-/* Some Notion layouts wrap header/properties with these classes */
 :root.ns-presenting .layout-content.layout-content-with-divider:not(:has([data-block-id])) {
   display: none !important;
 }
 
-/* If the wrapper contains both header + blocks, hide just the non-block children */
-:root.ns-presenting .layout-content.layout-content-with-divider > *:not(:has([data-block-id])) {
-  display: none !important;
-}
-
-/* Hide right-side panels/peek/sidebars that can appear while viewing DB pages */
 :root.ns-presenting .notion-peek-renderer,
 :root.ns-presenting [data-testid="peek-renderer"],
 :root.ns-presenting [data-testid="side-peek"],
@@ -80,17 +66,14 @@ export const PRESENTATION_CSS = `
   display: none !important;
 }
 
-/* Keep Notion AI floating button visible and near the slide overlay */
-:root.ns-presenting button[aria-label*="Notion AI" i],
-:root.ns-presenting [data-testid*="notion-ai" i],
-:root.ns-presenting [aria-label*="Notion AI" i][role="button"] {
-  position: fixed !important;
-  right: 12px !important;
-  bottom: 52px !important;
-  z-index: 2147483647 !important;
+:root.ns-presenting [data-block-id] pre,
+:root.ns-presenting [data-block-id] code,
+:root.ns-presenting [class*="code"],
+:root.ns-presenting [class*="Code"] {
+  display: block !important;
+  visibility: visible !important;
 }
 
-/* Simple overlay counter */
 .ns-slide-overlay {
   position: fixed;
   right: 12px;

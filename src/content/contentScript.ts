@@ -4,23 +4,8 @@ import type { MessageFromBackground } from '../shared/types';
 
 const presenter = createPresenter();
 
-console.log('[NotionSlides] Content script loaded');
-
-// NOTE: We intentionally do NOT inject a <script> tag here.
-// Notion uses a strict CSP that blocks inline scripts. Instead, the service
-// worker injects a page-world bridge via chrome.scripting.executeScript
-// (world: 'MAIN') when toggling presentation.
-
-window.addEventListener('message', (event) => {
-  if (event.source !== window) return;
-  const data = event.data as any;
-  if (!data || data.source !== 'notion-slides' || data.type !== 'debug') return;
-  (presenter as any).debug?.();
-});
-
 function onMessage(msg: MessageFromBackground, _sender: chrome.runtime.MessageSender, sendResponse: (resp?: any) => void) {
   if (msg?.type === 'ns-toggle-presentation') {
-    console.log('[NotionSlides] Toggle presentation');
     presenter.toggle();
     sendResponse({ ok: true, isPresenting: presenter.isPresenting });
     return true;
@@ -44,17 +29,13 @@ window.addEventListener(
     const action = interpretKey(e);
     if (!action) return;
 
-    // Always allow Escape.
     if (action !== 'exit') {
       const editing = isEditableTarget(e.target);
       const hasModifier = e.metaKey || e.ctrlKey || e.altKey;
 
-      // In editing contexts, do not hijack navigation keys unless a modifier is used.
       if (editing && !hasModifier) return;
     }
 
-    // Prevent default browser scrolling in presentation mode.
-    // (We avoid preventing if we're not actually handling.)
     e.preventDefault();
     e.stopPropagation();
 
