@@ -158,7 +158,8 @@ export function createPresenter() {
     isPresenting: false,
     boundaries: [],
     currentIndex: 0,
-    restoreScrollTop: null
+    restoreScrollTop: null,
+    zoomLevel: 1.5
   };
 
   function ensureStyle(): void {
@@ -243,7 +244,23 @@ export function createPresenter() {
   }
 
   function updateOverlay(): void {
-    overlay.setText(`${state.currentIndex + 1}/${Math.max(1, state.boundaries.length)}`);
+    const zoomPercent = Math.round(state.zoomLevel * 100);
+    overlay.setText(`${state.currentIndex + 1}/${Math.max(1, state.boundaries.length)} · ${zoomPercent}%`);
+  }
+
+  function applyZoom(): void {
+    if (!state.isPresenting) return;
+    const root = getContentRoot();
+    root.style.transform = `scale(${state.zoomLevel})`;
+    root.style.transformOrigin = 'top center';
+    root.style.transition = 'transform 0.2s ease-out';
+  }
+
+  function clearZoom(): void {
+    const root = getContentRoot();
+    root.style.transform = '';
+    root.style.transformOrigin = '';
+    root.style.transition = '';
   }
 
   function recomputeBoundaries(reason: 'enter' | 'mutation' | 'navigate') {
@@ -289,7 +306,7 @@ export function createPresenter() {
     }
   }
 
-  function gotoIndex(nextIndex: number): void {
+  function gotoIndex(nextIndex: number, direction?: 'next' | 'prev'): void {
     if (!state.isPresenting) return;
     const root = getContentRoot();
     const target = getScrollTarget();
@@ -308,12 +325,37 @@ export function createPresenter() {
       return;
     }
 
+    const oldIndex = state.currentIndex;
     state.currentIndex = clamped;
     updateOverlay();
 
     applySlideVisibilityCss(getContentRoot(), state.boundaries, state.currentIndex, slideVisibilityEl);
 
-    scrollToElementStart(target, resolved, 'smooth');
+    // Add directional slide animation
+    if (direction && oldIndex !== clamped) {
+      // Next: slide up (from below), Prev: slide down (from above)
+      const slideDistance = direction === 'next' ? 200 : -200;
+      
+      // Start with content offset in the opposite direction
+      root.style.transition = 'none';
+      root.style.transform = `translateY(${slideDistance}px) scale(${state.zoomLevel})`;
+      
+      // Scroll to new position instantly
+      scrollToElementStart(target, resolved, 'auto');
+      
+      // Trigger reflow to ensure the transform is applied
+      void root.offsetHeight;
+      
+      // Animate content sliding into view
+      root.style.transition = 'transform 0.45s cubic-bezier(0.25, 0.1, 0.25, 1)';
+      root.style.transform = `translateY(0) scale(${state.zoomLevel})`;
+      
+      setTimeout(() => {
+        root.style.transition = '';
+      }, 450);
+    } else {
+      scrollToElementStart(target, resolved, 'smooth');
+    }
   }
 
   function startObserving(): void {
@@ -345,6 +387,7 @@ export function createPresenter() {
     overlay.mount();
 
     recomputeBoundaries('enter');
+    applyZoom();
     startObserving();
   }
 
@@ -360,6 +403,7 @@ export function createPresenter() {
     overlay.unmount();
     stopObserving();
     removeStyle();
+    clearZoom();
 
     restoreScrollbarContainer();
 
@@ -377,6 +421,7 @@ export function createPresenter() {
 
     state.boundaries = [];
     state.currentIndex = 0;
+    state.zoomLevel = 1.5;
   }
 
   function toggle(): void {
@@ -390,13 +435,28 @@ export function createPresenter() {
     },
     toggle,
     next() {
-      gotoIndex(state.currentIndex + 1);
+      gotoIndex(state.currentIndex + 1, 'next');
     },
     prev() {
-      gotoIndex(state.currentIndex - 1);
+      gotoIndex(state.currentIndex - 1, 'prev');
     },
     async fullscreen() {
       await toggleFullscreen();
+    },
+    zoomIn() {
+      state.zoomLevel = Math.min(3, state.zoomLevel + 0.1);
+      applyZoom();
+      updateOverlay();
+    },
+    zoomOut() {
+      state.zoomLevel = Math.max(0.5, state.zoomLevel - 0.1);
+      applyZoom();
+      updateOverlay();
+    },
+    zoomReset() {
+      state.zoomLevel = 1;
+      applyZoom();
+      updateOverlay();
     },
     exit() {
       exit();

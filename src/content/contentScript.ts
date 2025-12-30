@@ -42,6 +42,9 @@ window.addEventListener(
     if (action === 'next') presenter.next();
     if (action === 'prev') presenter.prev();
     if (action === 'fullscreen') void presenter.fullscreen();
+    if (action === 'zoom-in') presenter.zoomIn();
+    if (action === 'zoom-out') presenter.zoomOut();
+    if (action === 'zoom-reset') presenter.zoomReset();
     if (action === 'exit') presenter.exit();
   },
   { capture: true }

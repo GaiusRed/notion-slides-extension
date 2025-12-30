@@ -3,7 +3,17 @@
   "name": "Notion Slides",
   "version": "0.1.0",
   "description": "Toggle a clean presentation mode in Notion with slide navigation and fullscreen.",
+  "icons": {
+    "16": "NotionSlides.png",
+    "48": "NotionSlides.png",
+    "128": "NotionSlides.png"
+  },
   "action": {
+    "default_icon": {
+      "16": "NotionSlides.png",
+      "48": "NotionSlides.png",
+      "128": "NotionSlides.png"
+    },
     "default_title": "Toggle Notion Slides presentation"
   },
   "background": {

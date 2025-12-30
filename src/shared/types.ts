@@ -11,6 +11,7 @@ export type PresenterState = {
   boundaries: SlideBoundary[];
   currentIndex: number;
   restoreScrollTop: number | null;
+  zoomLevel: number;
 };
 
 export type ToggleMessage = { type: 'ns-toggle-presentation' };
