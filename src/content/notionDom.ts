@@ -8,9 +8,29 @@ export type ScrollTarget =
   | { kind: 'window' }
   | { kind: 'element'; el: HTMLElement };
 
+function isScrollable(el: HTMLElement): boolean {
+  const style = window.getComputedStyle(el);
+  const overflowY = style.overflowY;
+  const canScrollY = overflowY === 'auto' || overflowY === 'scroll';
+  return canScrollY && el.scrollHeight > el.clientHeight + 50;
+}
+
+function findScrollableAncestor(start: Element | null): HTMLElement | null {
+  let cur: Element | null = start;
+  while (cur) {
+    if (cur instanceof HTMLElement && isScrollable(cur)) return cur;
+    cur = cur.parentElement;
+  }
+  return null;
+}
+
 export function getScrollTarget(): ScrollTarget {
   // Notion often uses a central scroll container, but it changes.
   // We try a few heuristics and fall back to window.
+  const root = getContentRoot();
+  const scrollAncestor = findScrollableAncestor(root);
+  if (scrollAncestor) return { kind: 'element', el: scrollAncestor };
+
   const overflowHint = document
     .querySelector('[data-testid="page-content"]')
     ?.closest<HTMLElement>('[style*="overflow"]');
@@ -25,10 +45,7 @@ export function getScrollTarget(): ScrollTarget {
   for (const c of candidates) {
     if (!c) continue;
     const el = c as HTMLElement;
-    const style = window.getComputedStyle(el);
-    const overflowY = style.overflowY;
-    const isScrollable = (overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight + 50;
-    if (isScrollable) return { kind: 'element', el };
+    if (isScrollable(el)) return { kind: 'element', el };
   }
 
   // Fallback: if document itself scrolls, use window.
@@ -76,8 +93,11 @@ function uniqBoundaries(boundaries: SlideBoundary[]): SlideBoundary[] {
 export function scanSlideBoundaries(root: HTMLElement): SlideBoundary[] {
   const boundaries: SlideBoundary[] = [];
 
+  // Snapshot blocks list for stable DOM-order computations.
+  const blocks = Array.from(root.querySelectorAll<HTMLElement>('[data-block-id]'));
+
   // Start boundary
-  const firstBlock = root.querySelector<HTMLElement>('[data-block-id]') ?? root.firstElementChild?.closest<HTMLElement>('*') ?? root;
+  const firstBlock = blocks[0] ?? root.firstElementChild?.closest<HTMLElement>('*') ?? root;
   boundaries.push({ kind: 'start', blockId: firstBlock?.getAttribute?.('data-block-id') ?? undefined, element: firstBlock ?? root });
 
   // Heading 1 boundaries
@@ -99,8 +119,15 @@ export function scanSlideBoundaries(root: HTMLElement): SlideBoundary[] {
   ];
 
   for (const d of dividerCandidates) {
-    const block = closestBlock(d);
-    boundaries.push({ kind: 'divider', blockId: block.getAttribute('data-block-id') ?? undefined, element: block });
+    const dividerBlock = closestBlock(d);
+    const idx = blocks.indexOf(dividerBlock);
+    const nextBlock = idx >= 0 ? blocks[idx + 1] : null;
+    const boundaryEl = nextBlock ?? dividerBlock;
+    boundaries.push({
+      kind: 'divider',
+      blockId: boundaryEl.getAttribute('data-block-id') ?? undefined,
+      element: boundaryEl
+    });
   }
 
   return uniqBoundaries(boundaries);

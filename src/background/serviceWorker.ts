@@ -15,6 +15,27 @@ async function ping(tabId: number): Promise<boolean> {
   }
 }
 
+async function ensurePageBridge(tabId: number): Promise<void> {
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      world: 'MAIN',
+      func: () => {
+        try {
+          (window as any).__NotionSlides = (window as any).__NotionSlides || {};
+          (window as any).__NotionSlides.debug = () => {
+            window.postMessage({ source: 'notion-slides', type: 'debug' }, '*');
+          };
+        } catch {
+          // ignore
+        }
+      }
+    });
+  } catch (e) {
+    console.warn('[NotionSlides] Failed to inject page bridge:', e);
+  }
+}
+
 async function ensureContentScript(tabId: number): Promise<void> {
   const ok = await ping(tabId);
   if (ok) return;
@@ -32,6 +53,7 @@ async function ensureContentScript(tabId: number): Promise<void> {
 
 async function sendToggle(tabId: number): Promise<void> {
   await ensureContentScript(tabId);
+  await ensurePageBridge(tabId);
   try {
     await chrome.tabs.sendMessage(tabId, { type: 'ns-toggle-presentation' });
   } catch (e) {

@@ -6,6 +6,18 @@ const presenter = createPresenter();
 
 console.log('[NotionSlides] Content script loaded');
 
+// NOTE: We intentionally do NOT inject a <script> tag here.
+// Notion uses a strict CSP that blocks inline scripts. Instead, the service
+// worker injects a page-world bridge via chrome.scripting.executeScript
+// (world: 'MAIN') when toggling presentation.
+
+window.addEventListener('message', (event) => {
+  if (event.source !== window) return;
+  const data = event.data as any;
+  if (!data || data.source !== 'notion-slides' || data.type !== 'debug') return;
+  (presenter as any).debug?.();
+});
+
 function onMessage(msg: MessageFromBackground, _sender: chrome.runtime.MessageSender, sendResponse: (resp?: any) => void) {
   if (msg?.type === 'ns-toggle-presentation') {
     console.log('[NotionSlides] Toggle presentation');

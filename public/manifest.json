@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Notion Slides — Presentation Mode",
+  "name": "Notion Slides",
   "version": "0.1.0",
   "description": "Toggle a clean presentation mode in Notion with slide navigation and fullscreen.",
   "action": {
-    "default_title": "Toggle Notion Presentation Mode"
+    "default_title": "Toggle Notion Slides presentation"
   },
   "background": {
     "service_worker": "background/serviceWorker.js"
