@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Notion Slides — Presentation Mode",
+  "version": "0.1.0",
+  "description": "Toggle a clean presentation mode in Notion with slide navigation and fullscreen.",
+  "action": {
+    "default_title": "Toggle Notion Presentation Mode"
+  },
+  "background": {
+    "service_worker": "background/serviceWorker.js"
+  },
+  "permissions": ["tabs", "scripting", "activeTab"],
+  "host_permissions": [
+    "https://www.notion.so/*",
+    "https://*.notion.so/*",
+    "https://*.notion.site/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.notion.so/*",
+        "https://*.notion.so/*",
+        "https://*.notion.site/*"
+      ],
+      "js": ["content/contentScript.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "toggle-presentation": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+P",
+        "mac": "Command+Shift+P"
+      },
+      "description": "Toggle Notion Presentation Mode"
+    }
+  }
+}

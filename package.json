@@ -1,0 +1,25 @@
+{
+  "name": "notion-slides",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npm run dev:prep && npm run dev:content",
+    "dev:prep": "vite build --mode development --config vite.content.config.ts && vite build --mode development --config vite.sw.config.ts",
+    "dev:content": "vite build --watch --mode development --config vite.content.config.ts",
+    "build": "npm run build:content && npm run build:sw",
+    "build:content": "vite build --config vite.content.config.ts",
+    "build:sw": "vite build --config vite.sw.config.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "format": "prettier -w ."
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.280",
+    "@types/node": "^22.10.2",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7"
+  }
+}
