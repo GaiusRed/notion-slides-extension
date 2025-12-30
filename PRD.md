@@ -304,3 +304,62 @@ Using a separate profile avoids polluting the developer’s main profile and mak
 - How strict should “Heading 1” mapping be (Notion heading types vs semantic aria headings)?
 - Should dividers create a new slide before or after divider, or both? Prefer after divider.
 - Do we need per-page persisted settings (e.g., “treat H2 as slides”)? (Out of scope MVP)
+---
+
+## 19) Post-MVP Enhancements (Implemented)
+
+The following features were implemented after the initial MVP release to improve presenter experience and visual feedback.
+
+### Extension Branding
+- **Extension icon**: Added visual identity to extension action button and browser toolbar.
+- **Implementation**: Icon asset (`NotionSlides.png`) placed in `public/` directory and referenced in manifest at 16px, 48px, and 128px sizes.
+- **Rationale**: Improves discoverability in crowded toolbars and provides professional polish in extension marketplace.
+
+### Directional Slide Transitions
+- **Feature**: Animated slide transitions that provide visual continuity and directional feedback during navigation.
+- **Behavior**:
+  - **Next slide**: Content slides up from below (200px translateY offset → 0).
+  - **Previous slide**: Content slides down from above (-200px translateY offset → 0).
+  - Duration: 450ms with `cubic-bezier(0.25, 0.1, 0.25, 1)` easing.
+  - Scroll position changes instantly; only the content transform animates.
+- **Implementation**:
+  - `gotoIndex()` accepts optional `direction: 'next' | 'prev'` parameter.
+  - Animation uses CSS transforms with transition suppression during setup, then reflow trigger + smooth transition to final position.
+  - Transform respects current zoom level: `translateY(offset) scale(zoomLevel)`.
+  - Timeout cleanup ensures transition property is removed after animation completes.
+- **UX Goal**: Reduce cognitive load by making navigation direction visually obvious. Pronounced motion (200px travel) ensures animation is noticeable without being jarring.
+- **Edge Cases**:
+  - Navigation without direction parameter (e.g., initial enter or recompute) falls back to smooth scroll without animation.
+  - Animation coordinate system works for both window and element scroll targets.
+
+### Presentation Zoom
+- **Feature**: Built-in zoom control for presentations, eliminating dependency on browser-level zoom.
+- **Default Behavior**: Presentation mode auto-starts at **150% zoom (1.5x scale)** for improved readability on large screens and projectors.
+- **Manual Control**:
+  - **Zoom In**: `+` or `=` key (increases by 10%, max 300%).
+  - **Zoom Out**: `-` key (decreases by 10%, min 50%).
+  - **Reset**: `0` key (returns to 150% default).
+- **UI Feedback**: Overlay displays current zoom percentage alongside slide counter (e.g., "3/12 · 150%").
+- **Implementation**:
+  - State: Added `zoomLevel: number` to `PresenterState`, initialized to 1.5.
+  - Transform: Applied via `root.style.transform = scale(${zoomLevel})` with `transform-origin: top center`.
+  - Smooth transitions: 200ms ease-out on zoom changes.
+  - Coordination: Zoom transform stacks with slide animation transforms using compound `translateY() scale()` syntax.
+  - Cleanup: Zoom transform cleared on exit; zoom level reset to 1.5 (not 1.0) for next session.
+- **Shortcuts**: Added `zoom-in`, `zoom-out`, `zoom-reset` to `Shortcut` union type; wired through `interpretKey()` and `contentScript.ts` event handler.
+- **Rationale**: 
+  - Browser zoom affects entire viewport including chrome/UI; extension zoom targets only content root.
+  - 150% default addresses common presenter pain point of "too small to read from back of room" without manual intervention.
+  - Granular 10% increments provide fine-tuned control for varying display sizes and distances.
+
+### Technical Notes
+- **CSS Transform Stacking**: Both zoom and slide animations manipulate `transform` property on content root. Implementation ensures they compose correctly via compound transform string.
+- **Transition Management**: Careful use of `transition: none` → reflow → `transition: ...` pattern prevents unwanted initial animation flashes.
+- **State Persistence**: Zoom level persists across slide navigation within a session but resets between enter/exit cycles (intentional; prevents unexpected zoom on re-entry).
+- **Performance**: Transform-based zoom leverages GPU compositing; no performance degradation observed on pages with 100+ blocks.
+
+### Future Considerations
+- **Configurable default zoom**: Allow users to set preferred starting zoom via extension options page.
+- **Zoom persistence**: Store zoom preference in `chrome.storage` across sessions.
+- **Animation toggle**: Provide option to disable slide transitions for users who prefer instant navigation.
+- **Mouse/touchpad zoom**: Support pinch-to-zoom or scroll+modifier gestures (requires pointer event handling).
