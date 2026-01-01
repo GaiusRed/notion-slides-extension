@@ -79,12 +79,27 @@ export const PRESENTATION_CSS = `
   right: 12px;
   bottom: 12px;
   z-index: 2147483647;
-  pointer-events: none;
+  pointer-events: auto;
   user-select: none;
   font: 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color: rgba(255, 255, 255, 0.92);
   background: rgba(0, 0, 0, 0.55);
   padding: 6px 8px;
   border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ns-slide-overlay .ns-overlay-btn {
+  all: unset;
+  cursor: pointer;
+  line-height: 1;
+  font-size: 14px;
+  padding: 2px;
+}
+
+.ns-slide-overlay .ns-overlay-text {
+  margin-left: 4px;
 }
 `;

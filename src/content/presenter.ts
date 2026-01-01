@@ -1,6 +1,6 @@
 import type { PresenterState, SlideBoundary } from '../shared/types';
 import { PRESENTATION_CSS } from './styles';
-import { createOverlay } from './overlay';
+import { createOverlay, type OverlayApi } from './overlay';
 import {
   getContentRoot,
   getScrollTarget,
@@ -134,7 +134,7 @@ function applySlideVisibilityCss(
 }
 
 export function createPresenter() {
-  const overlay = createOverlay();
+  let overlay: OverlayApi;
 
   let styleEl: HTMLStyleElement | null = null;
   let slideVisibilityEl: HTMLStyleElement | null = null;
@@ -161,6 +161,12 @@ export function createPresenter() {
     restoreScrollTop: null,
     zoomLevel: 1.5
   };
+
+  overlay = createOverlay({
+    start: () => gotoIndex(0),
+    prev: () => gotoIndex(state.currentIndex - 1, 'prev'),
+    next: () => gotoIndex(state.currentIndex + 1, 'next')
+  });
 
   function ensureStyle(): void {
     if (styleEl) return;
@@ -434,6 +440,9 @@ export function createPresenter() {
       return state.isPresenting;
     },
     toggle,
+    start() {
+      gotoIndex(0);
+    },
     next() {
       gotoIndex(state.currentIndex + 1, 'next');
     },

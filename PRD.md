@@ -363,3 +363,17 @@ The following features were implemented after the initial MVP release to improve
 - **Zoom persistence**: Store zoom preference in `chrome.storage` across sessions.
 - **Animation toggle**: Provide option to disable slide transitions for users who prefer instant navigation.
 - **Mouse/touchpad zoom**: Support pinch-to-zoom or scroll+modifier gestures (requires pointer event handling).
+
+### Overlay Click Controls (Editing-Safe Navigation)
+- **Problem**: The most common complaint is that when a Notion page is **not locked**, keyboard navigation shortcuts are intentionally suppressed to avoid interfering with editing (see FR-6), but this also removes the primary way to advance slides.
+- **Feature**: Add **clickable overlay controls** to allow navigation without relying on keyboard shortcuts.
+- **UI**: Three unobtrusive text buttons on the overlay:
+  - **Return to start**: `<<`
+  - **Previous slide**: `<`
+  - **Next slide**: `>`
+- **Behavior**:
+  - Always clickable while presentation mode is on.
+  - Works even when the page is editable / not locked and keyboard shortcuts are suppressed.
+  - Does not steal focus from Notion editing (avoid focusing inputs; use non-intrusive click targets).
+  - Reuses the same navigation logic as keyboard shortcuts (updates slide index and scroll target).
+- **Rationale**: Preserves the “don’t interfere with editing” guarantee while still making slide navigation possible in the common “present while editing” workflow.
